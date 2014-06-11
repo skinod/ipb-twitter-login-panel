@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="utf-8"?>
+<hookexport>
+  <hookdata>
+    <config>
+      <hook_name>twitter login panel</hook_name>
+      <hook_desc/>
+      <hook_author>mr.wosi</hook_author>
+      <hook_email>wolaws@gmail.com</hook_email>
+      <hook_website>skinod.com</hook_website>
+      <hook_update_check/>
+      <hook_requirements><![CDATA[a:3:{s:21:"required_applications";a:0:{}s:20:"hook_php_version_min";s:0:"";s:20:"hook_php_version_max";s:0:"";}]]></hook_requirements>
+      <hook_version_human>1.0.1</hook_version_human>
+      <hook_version_long>1010</hook_version_long>
+      <hook_extra_data><![CDATA[a:3:{s:7:"display";a:2:{s:9:"templates";s:48:"From skin_global: twerod_form, twerod_navigation";s:3:"css";s:22:"CSS Files:  ipb_twerod";}s:9:"templates";a:1:{s:11:"skin_global";a:2:{i:0;s:11:"twerod_form";i:1;s:17:"twerod_navigation";}}s:3:"css";a:1:{s:0:"";s:10:"ipb_twerod";}}]]></hook_extra_data>
+      <hook_key>twerod</hook_key>
+      <hook_global_caches/>
+    </config>
+  </hookdata>
+  <hookfiles>
+    <file>
+      <hook_file_real>twerod_form.php</hook_file_real>
+      <hook_type>templateHooks</hook_type>
+      <hook_classname>twerod_form</hook_classname>
+      <hook_data><![CDATA[a:8:{s:12:"dataLocation";s:0:"";s:14:"libApplication";s:0:"";s:15:"classToOverload";s:0:"";s:9:"skinGroup";s:11:"skin_global";s:12:"skinFunction";s:14:"globalTemplate";s:4:"type";s:2:"if";s:2:"id";s:9:"memberbox";s:8:"position";s:8:"pre.else";}]]></hook_data>
+      <hooks_source><![CDATA[<?php
+
+class twerod_form {
+	
+	public function __construct() {
+		$this->registry = ipsRegistry::instance();
+		$this->registry->getClass('class_localization')->loadLanguageFile( array( 'public_login' ), 'core' );
+	}
+	
+	public function getOutput() {
+		$links = $this->registry->getClass('output')->getTemplate('global')->twerod_navigation();
+		return $links;
+	}
+	
+}]]></hooks_source>
+    </file>
+  </hookfiles>
+  <hookextras_settings/>
+  <hookextras_language/>
+  <hookextras_modules/>
+  <hookextras_help/>
+  <hookextras_templates>
+    <templates>
+      <template_group>skin_global</template_group>
+      <template_content><![CDATA[<php>
+	$uses_name		= false;
+	$uses_email		= false;
+	$_redirect		= '';
+	$login_methods  = array();
+	
+	foreach( $this->cache->getCache('login_methods') as $method )
+	{
+		if( $method['login_user_id'] == 'username' or $method['login_user_id'] == 'either' )
+		{
+			$uses_name	= true;
+		}
+		
+		if( $method['login_user_id'] == 'email' or $method['login_user_id'] == 'either' )
+		{
+			$uses_email	= true;
+		}
+		
+		if( $method['login_login_url'] )
+		{
+			$_redirect	= $method['login_login_url'];
+		}
+		
+		$login_methods[] = $method['login_folder_name'];
+	}
+	if( $uses_name AND $uses_email )
+	{
+		$this->lang->words['enter_name']	= $this->lang->words['enter_name_and_email'];
+	}
+	else if( $uses_email )
+	{
+		$this->lang->words['enter_name']	= $this->lang->words['enter_useremail'];
+	}
+	else
+	{
+		$this->lang->words['enter_name']	= $this->lang->words['enter_username'];
+	}
+</php>
+<if test="!$_redirect">
+	<div id="twerod" style="display:none;">
+		<div class="dropdown-caret right">
+			<span class="caret-outer"></span>
+			<span class="caret-inner"></span>
+		</div>
+		<form id='twlogin' action="{parse url="app=core&amp;module=global&amp;section=login&amp;do=process" base="public"}" method="post" class="signin">
+			<input type='hidden' name='auth_key' value='{$this->member->form_hash}' />
+			<input type="hidden" name="referer" value="{$this->settings['this_url']}" />
+			<fieldset class="textbox">
+				<label class="username">
+					<span>{$this->lang->words['enter_name']}</span>
+					<if test="privvy:|:$this->settings['priv_title']">
+						<a rel="nofollow" href='{parse url="app=core&amp;module=global&amp;section=privacy" template="privacy" seotitle="false" base="public"}' class="rules">{$this->settings['priv_title']}</a>
+					</if>
+					<input id='ips_username_twod' type='text' class='twod-ti' name='ips_username' size='30' />
+				</label>
+				<label class="password">
+					<span>{$this->lang->words['enter_pass']}</span>
+					<input id='ips_password_twod' type='password' class='twod-ti' name='ips_password' size='30' />
+				</label>
+			</fieldset>
+			<fieldset class="subchck">
+				<label class="remember">
+					<input type='checkbox' id='inline_remember' checked='checked' name='rememberMe' value='1' class='input_check' />
+					<span>{$this->lang->words['rememberme']}</span>
+				</label>
+				<if test="anonymous:|:!$this->settings['disable_anonymous']">
+					<label class="remember" style="clear: both;">
+						<input type='checkbox' id='inline_invisible' name='anonymous' value='1' class='input_check' />
+						<span>{$this->lang->words['form_invisible']}</span>
+					</label>
+				</if>
+				<input type='submit' class="btn" value='{$this->lang->words['log_in']}' />
+			</fieldset>
+			<p>
+				<a href='{parse url="app=core&amp;module=global&amp;section=lostpass" base="public"}' title='{$this->lang->words['retrieve_pw']}'>{$this->lang->words['login_forgotten_pass']}</a><br />
+				{$this->lang->words['register_prompt_1']} <a href="{parse url="app=core&amp;module=global&amp;section=register" base="public"}" title='{$this->lang->words['register_prompt_2']}'>{$this->lang->words['register_prompt_2']}</a>
+			</p>
+		</form>
+	</div>
+<else />
+	<script type='text/javascript'>
+		ipb.global.loginRedirect = "{$_redirect}";
+	</script>
+</if>]]></template_content>
+      <template_name>twerod_form</template_name>
+      <template_data/>
+      <template_updated>1350365186</template_updated>
+      <template_removable>0</template_removable>
+      <template_added_to>0</template_added_to>
+      <template_user_added>0</template_user_added>
+      <template_user_edited>0</template_user_edited>
+      <template_master_key>root</template_master_key>
+    </templates>
+    <templates>
+      <template_group>skin_global</template_group>
+      <template_content><![CDATA[		<script type="text/javascript" src="{$this->settings['js_base_url']}js/ips_twerod.js"></script>
+		<div id="twerod_form" style="display: none;">
+			<a href='{parse url="app=core&amp;module=global&amp;section=login" base="public"}' title='{$this->lang->words['sign_in']}' id='twerod-tggle'>{$this->lang->words['sign_in']} <span class="caret"></span></a>
+			{parse template="twerod_form" group="global"}
+		</div>]]></template_content>
+      <template_name>twerod_navigation</template_name>
+      <template_data/>
+      <template_updated>1350365186</template_updated>
+      <template_removable>0</template_removable>
+      <template_added_to>0</template_added_to>
+      <template_user_added>0</template_user_added>
+      <template_user_edited>0</template_user_edited>
+      <template_master_key>root</template_master_key>
+    </templates>
+  </hookextras_templates>
+  <hookextras_css>
+    <css>
+      <css_updated>1350365174</css_updated>
+      <css_group>ipb_twerod</css_group>
+      <css_content><![CDATA[#twerod_form {
+    display: inline;
+    position: relative;
+}
+
+#user_navigation {
+	overflow: visible !important;
+}
+
+#twerod-tggle {
+	color:#bbb !important;
+	font-weight: bold;
+	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.75);
+}
+
+#twerod-tggle:hover {
+	color:#fff !important;
+}
+
+#twerod-tggle .caret {
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #777777;
+    display: inline-block;
+    height: 0;
+    margin-left: 2px;
+    margin-top: 5px;
+    vertical-align: text-top;
+    width: 0;
+}
+
+#twerod-tggle:hover .caret, #twerod-tggle.open .caret {
+    border-top-color:#fff;
+}
+
+#twerod {
+	background: #fff;
+	border:1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 4px 4px 4px 4px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+	float: left;
+	padding: 15px;
+	font-family: Arial,sans-serif;
+	position: absolute;
+	left: 0;
+    z-index: 9999;
+	margin-top: 8px !important;
+	line-height: normal !important;
+}
+
+#twerod a {
+    background:none !important;
+    color: #0084B4 !important;
+    float: inherit !important;
+    line-height: 18px !important;
+    padding: 0 !important;
+}
+
+#twerod .signin {
+	padding: 0;
+	width: 240px;
+	font-size: 12px;
+	color: #333;
+    text-align: right;
+}
+
+#twerod .signin fieldset {
+    margin-bottom: 16px;
+}
+
+.twod-ti {
+	font-size: 13px;
+	line-height: 20px;
+}
+
+.twod-ti {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) inset, 0 1px 0 rgba(255, 255, 255, 0.075);
+}
+
+.twod-ti {
+    background-color: #FFFFFF;
+    border: 1px solid #CCCCCC;
+    border-radius: 3px 3px 3px 3px;
+    display: inline-block;
+    margin: 0;
+    outline: 0 none;
+    padding: 4px;
+    width: 230px;
+}
+
+.twod-ti:focus {
+    border-color: #56B4EF;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) inset, 0 0 8px rgba(82, 168, 236, 0.6);
+    color: #333333;
+    outline: 0 none;
+}
+
+#twerod .rules {
+    float: left !important;
+    font-size: 9px;
+    height: 18px;
+    line-height: 13px;
+}
+
+#twerod .username,#twerod .password  {
+	display: block;
+}
+
+#twerod .password {
+    padding-top: 10px;
+}
+
+#twerod .remember {
+    color: #999;
+	cursor: pointer;
+    float: right;
+	line-height: 30px;
+}
+
+#twerod .subchck {
+    display: block;
+	text-align: left;
+}
+
+.btn {
+    position: relative;
+    display: inline-block;
+    overflow: visible;
+    padding: 5px 10px;
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 18px;
+    color: #333;
+    text-shadow: 0 1px 0 rgba(255,255,255,.5);
+    background-color: #ccc;
+    background-repeat: no-repeat;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    border-radius: 0 \0;
+    -webkit-box-shadow: 0 1px 0 rgba(255,255,255,.5);
+    -moz-box-shadow: 0 1px 0 rgba(255,255,255,.5);
+    box-shadow: 0 1px 0 rgba(255,255,255,.5);
+}
+
+.btn {
+    background-color: #ddd;
+    background-repeat: repeat-x;
+    background-image: -khtml-gradient(linear,left top,left bottom,from(#fff),to(#ddd));
+    background-image: -moz-linear-gradient(#fff,#ddd);
+    background-image: -ms-linear-gradient(#fff,#ddd);
+    background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0%,#fff),color-stop(100%,#ddd));
+    background-image: -webkit-linear-gradient(#fff,#ddd);
+    background-image: -o-linear-gradient(#fff,#ddd);
+    background-image: linear-gradient(#fff,#ddd);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff',endColorstr='#dddddd');
+}
+
+.btn:hover {
+    text-decoration: none;
+    background-color: #d8d8d8;
+    background-image: -khtml-gradient(linear,left top,left bottom,from(#f8f8f8),to(#d8d8d8));
+    background-image: -moz-linear-gradient(#f8f8f8,#d8d8d8);
+    background-image: -ms-linear-gradient(#f8f8f8,#d8d8d8);
+    background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0%,#f8f8f8),color-stop(100%,#d8d8d8));
+    background-image: -webkit-linear-gradient(#f8f8f8,#d8d8d8);
+    background-image: -o-linear-gradient(#f8f8f8,#d8d8d8);
+    background-image: linear-gradient(#f8f8f8,#d8d8d8);
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+    border-color: #bbb;
+}
+
+.btn:active {
+    border-color: #bbb;
+    background-image: none;
+    -webkit-box-shadow: inset 0 2px 4px rgba(0,0,0,.1),0 1px 0 rgba(255,255,255,.5);
+    -moz-box-shadow: inset 0 2px 4px rgba(0,0,0,.1),0 1px 0 rgba(255,255,255,.5);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,.1),0 1px 0 rgba(255,255,255,.5);
+}
+
+
+#twerod .dropdown-caret {
+    float: left;
+    height: 7px;
+    overflow: hidden;
+    position: absolute;
+    top: -7px;
+    width: 12px;
+}
+
+.dropdown-caret .caret-inner {
+    border-bottom: 6px solid #FFFFFF;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    display: inline-block;
+    left: 1px;
+    top: 1px;
+}
+
+.dropdown-caret .caret-outer {
+    border-bottom: 7px solid rgba(0, 0, 0, 0.2);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+}
+.dropdown-caret .caret-outer, .dropdown-caret .caret-inner {
+    margin-left: -1px;
+    position: absolute;
+}
+.dropdown-caret.right {
+    left: 10px;
+}]]></css_content>
+      <css_position>0</css_position>
+      <css_added_to>0</css_added_to>
+      <css_app/>
+      <css_app_hide>0</css_app_hide>
+      <css_attributes/>
+      <css_modules/>
+      <css_removed>0</css_removed>
+      <css_master_key>root</css_master_key>
+    </css>
+  </hookextras_css>
+  <hookextras_replacements/>
+  <hookextras_tasks/>
+  <hookextras_database_create/>
+  <hookextras_database_alter/>
+  <hookextras_database_update/>
+  <hookextras_database_insert/>
+</hookexport>
